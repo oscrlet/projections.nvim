@@ -65,6 +65,7 @@ end
 -- Attempts to store the session
 ---@return boolean
 function Session.store_current_session()
+    if Session.current_session == nil then return false end
     local session_info = Session.info(Session.current_session)
     if session_info == nil then return false end
     return Session.store_to_session_file(tostring(session_info.path))
@@ -88,7 +89,9 @@ function Session.restore(spath)
     Session._ensure_sessions_directory()
     local session_info = Session.info(spath)
     if session_info == nil or not session_info.path:is_file() then return false end
-    return Session.restore_from_session_file(tostring(session_info.path))
+    local result = Session.restore_from_session_file(tostring(session_info.path))
+    Session.current_session = spath
+    return result
 end
 
 -- Attempts to restore a session from session file
@@ -99,7 +102,6 @@ function Session.restore_from_session_file(spath)
     -- TODO: correctly indicate errors here!
     vim.cmd("silent! source " .. vim.fn.fnameescape(spath))
     if config.restore_hooks.post ~= nil then config.restore_hooks.post() end
-    Session.current_session = spath
     return true
 end
 
