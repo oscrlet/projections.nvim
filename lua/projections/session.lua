@@ -5,7 +5,7 @@ local Project = require("projections.project")
 
 local Session = {}
 Session.__index = Session
-
+Session.current_session = nil
 
 ---@alias SessionInfo { path: Path, project: Project }
 
@@ -62,6 +62,14 @@ function Session.store(spath)
     return Session.store_to_session_file(tostring(session_info.path))
 end
 
+-- Attempts to store the session
+---@return boolean
+function Session.store_current_session()
+    local session_info = Session.info(Session.current_session)
+    if session_info == nil then return false end
+    return Session.store_to_session_file(tostring(session_info.path))
+end
+
 -- Attempts to store to session file
 ---@param spath string Path to the session file
 ---@returns boolean
@@ -91,6 +99,7 @@ function Session.restore_from_session_file(spath)
     -- TODO: correctly indicate errors here!
     vim.cmd("silent! source " .. vim.fn.fnameescape(spath))
     if config.restore_hooks.post ~= nil then config.restore_hooks.post() end
+    Session.current_session = spath
     return true
 end
 
